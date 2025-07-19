@@ -3,7 +3,8 @@
   "name": "Timer Overlay",
   "version": "1.0",
   "description": "Simple keyboard-controlled timer overlay.",
-  "permissions": ["storage"],
+  "permissions": ["storage", "tabs"],
+  "background": { "service_worker": "background.js" },
   "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
