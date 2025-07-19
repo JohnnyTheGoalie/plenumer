@@ -1,13 +1,20 @@
-# Timer Overlay Extension
+# Always-on-Top Timer
 
-This Chrome extension shows a small timer overlay on every page and provides a
-popup to start or pause the timer.
+This is a small Windows timer utility that stays above all other windows in the top left corner. Use keyboard shortcuts to control the timer.
 
-## Usage
+## Shortcuts
 
-* Press **n** to start a 10 minute timer.
-* Press **r** to start a 2 minute timer.
-* Press **space** to pause/resume the timer.
+- **n**: start a 5 minute timer
+- **space**: pause or resume the timer
 
-You can also click the extension icon to open a popup where you can start a
-custom timer by entering minutes and hitting **Start**.
+The timer will update every second while running. The application uses the `keyboard` and `tkinter` libraries, so make sure they are installed:
+
+```bash
+pip install keyboard
+```
+
+Run the program with:
+
+```bash
+python timer.py
+```
