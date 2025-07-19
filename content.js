@@ -1,17 +1,40 @@
 let overlay;
 let interval;
 
-document.addEventListener("keydown", async (e) => {
+function safeSendMessage(msg) {
+  try {
+    chrome.runtime.sendMessage(msg, () => {
+      if (
+        chrome.runtime.lastError &&
+        chrome.runtime.lastError.message !== "Extension context invalidated."
+      ) {
+        console.warn("Failed to send message", chrome.runtime.lastError);
+      }
+    });
+  } catch (e) {
+    if (e.message !== "Extension context invalidated.") {
+      console.warn("Failed to send message", e);
+    }
+  }
+}
+
+document.addEventListener("keydown", (e) => {
   if (["n", "r"].includes(e.key)) {
     const durations = { n: 10 * 60, r: 2 * 60 };
     const duration = durations[e.key];
-    chrome.runtime.sendMessage({ type: "startTimer", duration });
+    safeSendMessage({ type: "startTimer", duration });
   } else if (e.key === " ") {
-    chrome.runtime.sendMessage({ type: "togglePause" });
+    safeSendMessage({ type: "togglePause" });
   }
 });
 
 chrome.runtime.sendMessage({ type: "getTimer" }, (response) => {
+  if (chrome.runtime.lastError) {
+    if (chrome.runtime.lastError.message !== "Extension context invalidated.") {
+      console.warn("Failed to get timer", chrome.runtime.lastError);
+    }
+    return;
+  }
   if (response?.timerEnd) {
     startTimer(response);
   }
