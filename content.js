@@ -1,6 +1,3 @@
-+33
--14
-
 let overlay;
 let interval;
 
