@@ -1,23 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "plenumer",
+  "name": "Timer Overlay",
   "version": "1.0",
-  "description": "Synchronized timer overlay created by Jovan Lukovic.",
-  "author": "Jovan Lukovic",
-  "permissions": ["storage", "scripting", "activeTab"],
-  "background": {
-    "service_worker": "background.js"
-  },
+  "description": "Simple keyboard-controlled timer overlay.",
+  "permissions": ["storage"],
+  "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"],
       "css": ["overlay.css"]
     }
-  ],
-  "host_permissions": ["<all_urls>"],
-  "action": {
-    "default_title": "plenumer",
-    "default_popup": "popup.html"
-  }
+  ]
 }
