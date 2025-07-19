@@ -33,12 +33,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function broadcastTimer() {
   chrome.tabs.query({}, (tabs) => {
     for (const tab of tabs) {
-      chrome.tabs.sendMessage(tab.id, {
-        type: "updateTimer",
-        timerEnd,
-        remaining,
-        paused,
-      });
+      chrome.tabs.sendMessage(
+        tab.id,
+        {
+          type: "updateTimer",
+          timerEnd,
+          remaining,
+          paused,
+        },
+        () => {
+          // Ignore errors for tabs without the content script
+          if (chrome.runtime.lastError) {
+            // Most likely the tab doesn't have our content script
+            return;
+          }
+        }
+      );
     }
   });
 }
