@@ -1,5 +1,4 @@
 let timer = null;
-let intervalId = null;
 
 function broadcast() {
   chrome.tabs.query({}, (tabs) => {
@@ -10,26 +9,12 @@ function broadcast() {
 }
 
 function clearTimer() {
-  if (intervalId) {
-    clearInterval(intervalId);
-    intervalId = null;
-  }
   timer = null;
   chrome.storage.local.remove('timer');
+  chrome.alarms.clear('timerEnd');
   broadcast();
 }
 
-function tick() {
-  if (!timer || timer.paused) return;
-  const elapsed = Math.floor((Date.now() - timer.start) / 1000);
-  timer.remaining = Math.max(0, timer.duration - elapsed);
-  if (timer.remaining <= 0) {
-    clearTimer();
-  } else {
-    chrome.storage.local.set({ timer });
-    broadcast();
-  }
-}
 
 function startTimer(duration) {
   timer = {
@@ -39,8 +24,7 @@ function startTimer(duration) {
     paused: false,
   };
   chrome.storage.local.set({ timer });
-  if (intervalId) clearInterval(intervalId);
-  intervalId = setInterval(tick, 1000);
+  chrome.alarms.create('timerEnd', { when: Date.now() + duration * 1000 });
   broadcast();
 }
 
@@ -49,8 +33,12 @@ function togglePause() {
   if (timer.paused) {
     timer.start = Date.now() - (timer.duration - timer.remaining) * 1000;
     timer.paused = false;
+    chrome.alarms.create('timerEnd', { when: Date.now() + timer.remaining * 1000 });
   } else {
+    const elapsed = Math.floor((Date.now() - timer.start) / 1000);
+    timer.remaining = Math.max(0, timer.duration - elapsed);
     timer.paused = true;
+    chrome.alarms.clear('timerEnd');
   }
   chrome.storage.local.set({ timer });
   broadcast();
@@ -61,8 +49,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     startTimer(msg.duration);
   } else if (msg.type === 'togglePause') {
     togglePause();
+  } else if (msg.type === 'timerEnded') {
+    clearTimer();
   } else if (msg.type === 'getTimer') {
     sendResponse({ timer });
+  }
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'timerEnd') {
+    clearTimer();
   }
 });
 
@@ -75,7 +71,9 @@ chrome.storage.local.get('timer', ({ timer: saved }) => {
       : Math.max(0, saved.duration - Math.floor((Date.now() - saved.start) / 1000));
     timer.remaining = remaining;
     if (remaining > 0) {
-      if (!saved.paused) intervalId = setInterval(tick, 1000);
+      if (!saved.paused) {
+        chrome.alarms.create('timerEnd', { when: Date.now() + remaining * 1000 });
+      }
       broadcast();
     } else {
       chrome.storage.local.remove('timer');
