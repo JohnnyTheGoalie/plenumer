@@ -1,7 +1,7 @@
 # Timer Overlay Extension
 
-This Chrome extension shows a small timer overlay on every page and provides a
-popup to start or pause the timer.
+This Chrome extension shows a small timer overlay on every page at all times.
+Use the provided popup or keyboard shortcuts to start or pause the timer.
 
 ## Usage
 
