@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Global Timer Overlay",
+  "name": "plenumer",
   "version": "1.0",
-  "description": "Overlay timer triggered by keyboard, synced across tabs.",
+  "description": "Synchronized timer overlay created by Jovan Lukovic.",
+  "author": "Jovan Lukovic",
   "permissions": ["storage", "scripting", "activeTab"],
   "background": {
     "service_worker": "background.js"
@@ -15,6 +16,7 @@
   ],
   "host_permissions": ["<all_urls>"],
   "action": {
-    "default_title": "Timer Extension"
+    "default_title": "plenumer",
+    "default_popup": "popup.html"
   }
 }
