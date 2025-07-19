@@ -1,4 +1,6 @@
 let overlay;
+let timerInfo;
+let intervalId;
 
 function createOverlay() {
   if (!overlay) {
@@ -15,6 +17,13 @@ function removeOverlay() {
   }
 }
 
+function computeRemaining(info) {
+  if (!info) return 0;
+  if (info.paused) return info.remaining;
+  const elapsed = Math.floor((Date.now() - info.start) / 1000);
+  return Math.max(0, info.duration - elapsed);
+}
+
 function formatTime(sec) {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
@@ -22,23 +31,43 @@ function formatTime(sec) {
 }
 
 function updateDisplay(info) {
-  if (!info || info.remaining <= 0) {
+  const remaining = computeRemaining(info);
+  if (!info || remaining <= 0) {
     removeOverlay();
     return;
   }
+  info.remaining = remaining;
   createOverlay();
-  overlay.textContent = formatTime(info.remaining);
+  overlay.textContent = formatTime(remaining);
+}
+
+function startInterval() {
+  if (intervalId) return;
+  intervalId = setInterval(() => {
+    if (!timerInfo) return;
+    timerInfo.remaining = computeRemaining(timerInfo);
+    updateDisplay(timerInfo);
+    if (timerInfo.remaining <= 0) {
+      chrome.runtime.sendMessage({ type: 'timerEnded' });
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  }, 1000);
 }
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'timerUpdate') {
-    updateDisplay(msg.timer);
+    timerInfo = msg.timer;
+    startInterval();
+    updateDisplay(timerInfo);
   }
 });
 
 chrome.runtime.sendMessage({ type: 'getTimer' }, (response) => {
   if (response && response.timer) {
-    updateDisplay(response.timer);
+    timerInfo = response.timer;
+    startInterval();
+    updateDisplay(timerInfo);
   }
 });
 
@@ -50,4 +79,4 @@ document.addEventListener('keydown', (e) => {
   } else if (e.key === ' ') {
     chrome.runtime.sendMessage({ type: 'togglePause' });
   }
-});
+}, true);
