@@ -9,6 +9,9 @@ class TimerApp:
         master.geometry('+0+0')
         master.resizable(False, False)
 
+        # Helper to safely call Tk functions from other threads
+        self._tk_dispatch = lambda func, *a: master.after(0, func, *a)
+
         self.remaining = 0
         self.running = False
 
@@ -36,8 +39,9 @@ class TimerApp:
             import keyboard
             self._keyboard = keyboard
             self.register_global_hotkeys()
-        except Exception:
+        except Exception as e:
             # keyboard library not available or failed
+            print(f"Global hotkeys unavailable: {e}")
             self._keyboard = None
 
     def key_handler(self, event):
@@ -57,9 +61,12 @@ class TimerApp:
     def register_global_hotkeys(self):
         if not self._keyboard:
             return
-        self._keyboard.add_hotkey('space', self.toggle)
-        self._keyboard.add_hotkey('n', lambda: self.set_timer(5 * 60))
-        self._keyboard.add_hotkey('r', lambda: self.set_timer(2 * 60))
+        self._keyboard.add_hotkey('space',
+                                   lambda: self._tk_dispatch(self.toggle))
+        self._keyboard.add_hotkey('n',
+                                   lambda: self._tk_dispatch(self.set_timer, 5 * 60))
+        self._keyboard.add_hotkey('r',
+                                   lambda: self._tk_dispatch(self.set_timer, 2 * 60))
 
     def set_timer(self, seconds):
         self.remaining = seconds

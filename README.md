@@ -9,6 +9,8 @@ This project provides a small always-on-top timer application for Windows built 
    ```bash
    pip install keyboard
    ```
+   On some systems you may need to run the program with administrator/root
+   privileges for the library to capture keys globally.
 3. Run the application:
    ```bash
    python timer.py
