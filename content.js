@@ -2,18 +2,17 @@ let overlay;
 let timerInfo;
 let intervalId;
 
+// ensure overlay is present immediately
+createOverlay();
+if (overlay) {
+  overlay.textContent = '0:00';
+}
+
 function createOverlay() {
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.id = 'global-timer-overlay';
     document.body.appendChild(overlay);
-  }
-}
-
-function removeOverlay() {
-  if (overlay) {
-    overlay.remove();
-    overlay = null;
   }
 }
 
@@ -31,13 +30,11 @@ function formatTime(sec) {
 }
 
 function updateDisplay(info) {
-  const remaining = computeRemaining(info);
-  if (!info || remaining <= 0) {
-    removeOverlay();
-    return;
-  }
-  info.remaining = remaining;
   createOverlay();
+  const remaining = computeRemaining(info);
+  if (info) {
+    info.remaining = remaining;
+  }
   overlay.textContent = formatTime(remaining);
 }
 
@@ -49,6 +46,8 @@ function startInterval() {
     updateDisplay(timerInfo);
     if (timerInfo.remaining <= 0) {
       chrome.runtime.sendMessage({ type: 'timerEnded' });
+      timerInfo = null;
+      updateDisplay(timerInfo);
       clearInterval(intervalId);
       intervalId = null;
     }
@@ -58,17 +57,22 @@ function startInterval() {
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'timerUpdate') {
     timerInfo = msg.timer;
-    startInterval();
+    if (timerInfo) {
+      startInterval();
+    } else if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
     updateDisplay(timerInfo);
   }
 });
 
 chrome.runtime.sendMessage({ type: 'getTimer' }, (response) => {
-  if (response && response.timer) {
-    timerInfo = response.timer;
+  timerInfo = response && response.timer ? response.timer : null;
+  if (timerInfo) {
     startInterval();
-    updateDisplay(timerInfo);
   }
+  updateDisplay(timerInfo);
 });
 
 document.addEventListener('keydown', (e) => {
